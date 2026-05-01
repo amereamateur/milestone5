@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Web Security Demonstration Project</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>Web Security Demonstration Project</h1>
+            <p class="subtitle">University of Wolverhampton - BSc Cyber Security</p>
+        </header>
+
+        <div class="project-info">
+            <h2>About This Project</h2>
+            <p>
+                This project demonstrates common web security vulnerabilities (SQL Injection and XSS) 
+                and their mitigation techniques through two interactive versions.
+            </p>
+            
+            <div class="info-grid">
+                <div class="info-card">
+                    <h3>⚠️ Insecure Version</h3>
+                    <ul>
+                        <li>No input validation</li>
+                        <li>Vulnerable to XSS attacks</li>
+                        <li>Simulated SQL injection</li>
+                        <li>Dangerous output methods</li>
+                        <li>Insecure client-side storage &amp; logging</li>
+                        <li>Reflected input from URL parameters</li>
+                    </ul>
+                </div>
+                
+                <div class="info-card">
+                    <h3>✓ Secure Version</h3>
+                    <ul>
+                        <li>Input validation</li>
+                        <li>XSS protection</li>
+                        <li>SQL injection prevention</li>
+                        <li>Safe output encoding</li>
+                        <li>Password strength indicator</li>
+                        <li>CSRF token &amp; basic rate-limit simulation</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <div class="version-selection">
+            <h2>Choose a Version to Explore</h2>
+            <div class="button-container">
+                <a href="insecure.html" class="btn btn-insecure">
+                    <span class="btn-icon">⚠️</span>
+                    <span class="btn-text">Insecure Version</span>
+                    <span class="btn-subtitle">Vulnerable to attacks</span>
+                </a>
+                
+                <a href="secure.html" class="btn btn-secure">
+                    <span class="btn-icon">✓</span>
+                    <span class="btn-text">Secure Version</span>
+                    <span class="btn-subtitle">Protected implementation</span>
+                </a>
+            </div>
+        </div>
+
+        <div class="academic-info">
+            <h3>Academic Details</h3>
+            <p><strong>Student:</strong> Bazarbaev Muratsultan</p>
+            <p><strong>Student Number:</strong> 2428623</p>
+            <p><strong>Project Title:</strong> Designing and Testing a Secure Website</p>
+            <p><strong>Academic Question:</strong> How can common web security techniques help protect 
+               a website that stores and displays user information from SQL injection and 
+               cross-site scripting attacks?</p>
+        </div>
+
+        <footer>
+            <p>⚠️ <strong>Educational Purpose Only:</strong> These vulnerabilities are demonstrated 
+               in a controlled environment for learning purposes.</p>
+        </footer>
+    </div>
+</body>
+</html>

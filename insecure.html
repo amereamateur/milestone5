@@ -1,0 +1,299 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-XSS-Protection" content="0">
+    <title>Insecure Version - Web Security Demo</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="container">
+        <div class="version-badge insecure-badge">⚠️ INSECURE VERSION</div>
+        
+        <header>
+            <h1>Insecure Version</h1>
+            <a href="index.html" class="back-link">← Back to Home</a>
+        </header>
+
+        <div class="warning-box">
+            <h3>⚠️ Why This Version is Vulnerable</h3>
+            <ul>
+                <li><strong>No Input Validation:</strong> User input is accepted without any checks</li>
+                <li><strong>XSS Vulnerability:</strong> Uses <code>innerHTML</code> which allows script execution</li>
+                <li><strong>SQL Injection Simulation:</strong> Detects malicious SQL patterns and allows bypass</li>
+                <li><strong>No Output Encoding:</strong> User data displayed directly without sanitization</li>
+            </ul>
+        </div>
+
+        <div class="form-section">
+            <h2>Login / Registration Form</h2>
+            
+            <form id="insecureForm">
+                <div class="form-group">
+                    <label for="username">Username:</label>
+                    <input type="text" id="username" name="username" placeholder="Enter username">
+                    <small>Try: <code>admin' OR '1'='1</code></small>
+                </div>
+
+                <div class="form-group">
+                    <label for="email">Email:</label>
+                    <input type="text" id="email" name="email" placeholder="Enter email">
+                </div>
+
+                <div class="form-group">
+                    <label for="password">Password:</label>
+                    <input type="password" id="password" name="password" placeholder="Enter password">
+                    <small>Try: <code>anything</code></small>
+                </div>
+
+                <div class="form-group">
+                    <label>
+                        <input type="checkbox" id="rememberMe">
+                        Remember me (insecure – stores credentials in <code>localStorage</code>)
+                    </label>
+                    <small>Tick this to see how storing raw credentials client-side is dangerous.</small>
+                </div>
+
+                <div class="form-group">
+                    <label for="feedback">Feedback / Comment:</label>
+                    <textarea id="feedback" name="feedback" rows="4" 
+                              placeholder="Enter your feedback"></textarea>
+                    <small>Try XSS: <code>&lt;script&gt;alert('XSS')&lt;/script&gt;</code></small>
+                </div>
+
+                <button type="submit" class="btn btn-submit">Submit (Insecure)</button>
+                <button type="button" class="btn btn-clear" onclick="clearForm()">Clear</button>
+            </form>
+        </div>
+
+        <div class="output-section" id="outputSection" style="display:none;">
+            <h2>Output (Vulnerable Display)</h2>
+            <div id="output" class="output-box"></div>
+        </div>
+
+        <div class="test-cases">
+            <h3>🧪 Test Cases - Try These Attacks</h3>
+            
+            <div class="test-case-card">
+                <h4>SQL Injection Tests:</h4>
+                <ul>
+                    <li>Username: <code>admin' OR '1'='1</code> → Bypasses authentication</li>
+                    <li>Username: <code>admin' --</code> → Comment injection</li>
+                    <li>Username: <code>' OR 1=1 --</code> → Always true condition</li>
+                    <li>Username: <code>admin'; DROP TABLE users; --</code> → Destructive query</li>
+                </ul>
+            </div>
+
+            <div class="test-case-card">
+                <h4>XSS (Cross-Site Scripting) Tests:</h4>
+                <ul>
+                    <li>Feedback: <code>&lt;script&gt;alert('XSS Vulnerability!')&lt;/script&gt;</code></li>
+                    <li>Feedback: <code>&lt;img src=x onerror="alert('XSS')"&gt;</code></li>
+                    <li>Feedback: <code>&lt;script&gt;alert(document.cookie)&lt;/script&gt;</code></li>
+                    <li>Feedback: <code>&lt;h1 style="color:red"&gt;Injected HTML&lt;/h1&gt;</code></li>
+                </ul>
+            </div>
+
+            <div class="test-case-card">
+                <h4>Additional Insecure Behaviours (Conceptual)</h4>
+                <ul>
+                    <li>Session cookies without <code>HttpOnly</code> or <code>Secure</code> flags.</li>
+                    <li>No CSRF protection on state-changing requests.</li>
+                    <li>No rate limiting on login attempts.</li>
+                    <li>No Content Security Policy (CSP) header.</li>
+                </ul>
+            </div>
+        </div>
+
+        <div class="output-section" id="attackLogSection" style="display:none;">
+            <h2>Simulated Server Log (Insecure)</h2>
+            <div id="attackLog" class="output-box"></div>
+        </div>
+    </div>
+
+    <script>
+        // INSECURE CODE - FOR EDUCATIONAL DEMONSTRATION ONLY
+        // DO NOT USE IN PRODUCTION
+        //
+        // This page is intentionally unsafe:
+        // - It displays server responses with innerHTML (XSS)
+        // - It loads/executes any <script> tags found in output (XSS amplification)
+        // - It calls an intentionally SQLi-vulnerable backend endpoint
+
+        function loadDeps(callback) {
+            const scripts = [
+                'js/api.js'
+            ];
+            let i = 0;
+            function next() {
+                if (i >= scripts.length) return callback();
+                const s = document.createElement('script');
+                s.src = scripts[i++];
+                s.onload = next;
+                s.onerror = next; // keep going for demo
+                document.head.appendChild(s);
+            }
+            next();
+        }
+
+        // Insecure: auto-fill from URL query string (reflected input)
+        (function () {
+            const params = new URLSearchParams(window.location.search);
+            const usernameParam = params.get('username');
+            const feedbackParam = params.get('feedback');
+            if (usernameParam !== null) {
+                document.getElementById('username').value = usernameParam;
+            }
+            if (feedbackParam !== null) {
+                // INSECURE: raw value flows into innerHTML later
+                document.getElementById('feedback').value = feedbackParam;
+            }
+        })();
+
+        function detectXssType(feedback) {
+            if (/\<script[\s\S]*?\>[\s\S]*?\<\/script\>/i.test(feedback)) return 'XSS via <script> tag';
+            if (/\<img[^>]+onerror\s*=\s*['\"][^'\"]+['\"]/i.test(feedback)) return 'XSS via <img onerror>';
+            if (/\son\w+\s*=\s*['\"][^'\"]+['\"]/i.test(feedback)) return 'XSS via inline event handler';
+            return null;
+        }
+
+        function detectSqlLike(input) {
+            const upper = String(input || '').toUpperCase();
+            const indicators = ['SELECT', 'UNION', 'DROP', ' OR 1=1', "--", '/*', '*/', ';'];
+            return indicators.some(p => upper.includes(p));
+        }
+
+        function renderInsecureOutput({ username, email, password, feedback, loginRes, commentRes }) {
+            const xssType = detectXssType(feedback);
+            const sqlLike = detectSqlLike(username);
+
+            let output = '<div class="result-box">';
+
+            if (sqlLike) {
+                output += '<div class="alert alert-danger">';
+                output += '<h3>🚨 SQL INJECTION (Backend) - INSECURE</h3>';
+                output += '<p>This page called an intentionally vulnerable API which uses string concatenation.</p>';
+                output += '</div>';
+            } else {
+                output += '<div class="alert alert-success"><h3>Request Sent (No Validation)</h3></div>';
+            }
+
+            output += '<div class="user-data">';
+            output += '<h4>Server Response + Submitted Data (Displayed Insecurely):</h4>';
+
+            if (xssType) {
+                output += '<div class="alert alert-danger"><strong>⚠️ XSS payload entered:</strong> ' + xssType + '</div>';
+            }
+
+            // INSECURE: display raw user input directly in HTML (XSS risk)
+            output += '<p><strong>Username:</strong> ' + username + '</p>';
+            output += '<p><strong>Email:</strong> ' + email + '</p>';
+            output += '<p><strong>Password:</strong> ' + password + '</p>'; // INSECURE (never show passwords!)
+            output += '<p><strong>Feedback:</strong></p>';
+            output += '<div class="feedback-display">' + feedback + '</div>'; // INSECURE: stored/reflected XSS
+
+            output += '<hr style="margin:16px 0;">';
+            output += '<p><strong>Login API response:</strong></p>';
+            output += '<div class="feedback-display"><pre>' + JSON.stringify(loginRes, null, 2) + '</pre></div>';
+
+            if (commentRes && commentRes.comments) {
+                output += '<p><strong>Latest Comments (Rendered UNSAFELY):</strong></p>';
+                output += '<div class="feedback-display">';
+                commentRes.comments.forEach(function (c) {
+                    // INSECURE: inserting comment as HTML enables stored XSS
+                    output += '<div><strong>' + c.username + '</strong>: ' + c.comment + '</div>';
+                });
+                output += '</div>';
+            }
+
+            // localStorage demonstration
+            try {
+                const storedUser = localStorage.getItem('demo_insecure_username');
+                const storedPass = localStorage.getItem('demo_insecure_password');
+                if (storedUser !== null || storedPass !== null) {
+                    output += '<p><strong>Stored in localStorage (INSECURE):</strong></p>';
+                    output += '<div class="feedback-display"><code>demo_insecure_username = '
+                        + String(storedUser) + '</code><br><code>demo_insecure_password = '
+                        + String(storedPass) + '</code></div>';
+                }
+            } catch (err) {}
+
+            output += '</div></div>';
+
+            // INSECURE: innerHTML will interpret any HTML/JS in content
+            document.getElementById('output').innerHTML = output;
+
+            // INSECURE: execute scripts found in output (amplifies XSS)
+            const scripts = document.getElementById('output').querySelectorAll('script');
+            scripts.forEach(script => {
+                try { eval(script.textContent); } catch (e) { console.error('Script execution error:', e); }
+            });
+        }
+
+        async function handleSubmit(e) {
+            e.preventDefault();
+
+            const username = document.getElementById('username').value;
+            const email = document.getElementById('email').value;
+            const password = document.getElementById('password').value;
+            const feedback = document.getElementById('feedback').value;
+            const rememberMe = document.getElementById('rememberMe').checked;
+
+            let logOutput = '';
+
+            // INSECURE: optionally persist credentials in localStorage (plaintext)
+            if (rememberMe) {
+                try {
+                    localStorage.setItem('demo_insecure_username', username);
+                    localStorage.setItem('demo_insecure_password', password);
+                    logOutput += '[STORAGE] Credentials persisted to localStorage in plaintext (demo_insecure_* keys).\\n\\n';
+                } catch (err) {
+                    logOutput += '[STORAGE] localStorage write failed: ' + String(err) + '\\n\\n';
+                }
+            }
+
+            let loginRes = null;
+            let commentRes = null;
+
+            try {
+                loginRes = await window.CyberDemoApi.insecureLogin({ username, password, email });
+                logOutput += '[INSECURE LOGIN] ' + (loginRes.message || 'ok') + '\\n';
+                if (loginRes.insecure_query) logOutput += '[QUERY] ' + loginRes.insecure_query + '\\n\\n';
+            } catch (err) {
+                loginRes = err.data || { ok: false, error: String(err) };
+                logOutput += '[INSECURE LOGIN ERROR] ' + (err.message || String(err)) + '\\n\\n';
+            }
+
+            try {
+                commentRes = await window.CyberDemoApi.insecureComment({ username, comment: feedback });
+                logOutput += '[INSECURE COMMENT] ' + (commentRes.message || 'stored') + '\\n\\n';
+            } catch (err) {
+                commentRes = err.data || { ok: false, error: String(err) };
+                logOutput += '[INSECURE COMMENT ERROR] ' + (err.message || String(err)) + '\\n\\n';
+            }
+
+            document.getElementById('attackLog').textContent = logOutput || '[INFO] No obvious attack patterns detected; input still stored UNSANITISED.';
+            renderInsecureOutput({ username, email, password, feedback, loginRes, commentRes });
+
+            document.getElementById('outputSection').style.display = 'block';
+            document.getElementById('attackLogSection').style.display = 'block';
+            document.getElementById('outputSection').scrollIntoView({ behavior: 'smooth' });
+        }
+
+        function clearForm() {
+            document.getElementById('insecureForm').reset();
+            document.getElementById('outputSection').style.display = 'none';
+            document.getElementById('attackLogSection').style.display = 'none';
+        }
+
+        loadDeps(function () {
+            document.getElementById('insecureForm').addEventListener('submit', handleSubmit);
+        });
+
+        console.log('%c⚠️ INSECURE VERSION', 'color: red; font-size: 20px; font-weight: bold;');
+        console.log('This page intentionally contains security vulnerabilities for educational purposes.');
+    </script>
+</body>
+</html>
+
