@@ -21,6 +21,9 @@ DB_PATH = (BASE_DIR / "database.db").resolve()
 app = Flask(__name__)
 app.secret_key = os.environ.get("FLASK_SECRET_KEY", "dev-only-secret-key-change-me")
 
+with app.app_context():
+    init_db()
+
 
 SQLI_REGEX = re.compile(
     r"(?i)\b(select|union|insert|update|delete|drop|alter|create|exec|execute)\b|(--|\bor\b\s+1\s*=\s*1|/\*|\*/|;)"
